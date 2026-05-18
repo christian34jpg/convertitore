@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SI ⇄ IMPERIAL · UNIT CONVERTER</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+
+  :root {
+    --bg-void: #050709;
+    --bg-panel: #090d12;
+    --bg-card: #0d1520;
+    --bg-card2: #101a24;
+    --amber: #e8a020;
+    --amber-dim: #7a4f08;
+    --amber-glow: rgba(232,160,32,0.15);
+    --cyan: #00d4e8;
+    --cyan-dim: #004d55;
+    --cyan-glow: rgba(0,212,232,0.12);
+    --green: #39ff8a;
+    --green-dim: #0d3d21;
+    --red: #ff3c3c;
+    --text-primary: #c8d8e8;
+    --text-dim: #4a6070;
+    --text-bright: #e8f4ff;
+    --border: #1a2d40;
+    --border-bright: #2a4560;
+    --scanline: rgba(0,212,232,0.03);
+    --grid-line: rgba(0,212,232,0.05);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scanline) 2px,
+      var(--scanline) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+    animation: scanRoll 8s linear infinite;
+  }
+
+  @keyframes scanRoll {
+    from { background-position: 0 0; }
+    to   { background-position: 0 400px; }
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--border-bright);
+    background: linear-gradient(180deg, rgba(0,212,232,0.06) 0%, transparent 100%);
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .logo-badge {
+    width: 52px; height: 52px;
+    border: 2px solid var(--cyan);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle, rgba(0,212,232,0.15) 0%, transparent 70%);
+    flex-shrink: 0;
+    animation: pulseBadge 3s ease-in-out infinite;
+  }
+  @keyframes pulseBadge {
+    0%,100% { box-shadow: 0 0 8px var(--cyan), inset 0 0 8px rgba(0,212,232,0.1); }
+    50%      { box-shadow: 0 0 20px var(--cyan), inset 0 0 16px rgba(0,212,232,0.2); }
+  }
+  .logo-badge svg { width: 28px; height: 28px; }
+
+  .header-text {}
+  .header-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    line-height: 1;
+  }
+  .header-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 3px;
+    margin-top: 5px;
+  }
+
+  .header-status {
+    margin-left: auto;
+    text-align: right;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    margin-right: 6px;
+    animation: blink 1.4s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ── CATEGORY TABS ── */
+  .tabs-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(5,7,9,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .tabs-wrap::-webkit-scrollbar { height: 2px; }
+  .tabs-wrap::-webkit-scrollbar-track { background: transparent; }
+  .tabs-wrap::-webkit-scrollbar-thumb { background: var(--cyan-dim); }
+
+  .tab-btn {
+    position: relative;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    padding: 14px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .tab-btn .tab-icon { font-size: 16px; }
+  .tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 2px;
+    background: var(--cyan);
+    transition: width 0.25s ease;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: var(--cyan); }
+  .tab-btn.active::after { width: 80%; }
+
+  /* ── MAIN ── */
+  main {
+    position: relative;
+    z-index: 10;
+    padding: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .category-panel { display: none; }
+  .category-panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .category-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--amber);
+    text-shadow: 0 0 10px var(--amber);
+  }
+  .category-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--amber-dim), transparent);
+  }
+
+  /* ── CONVERTER CARD ── */
+  .converters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+    gap: 20px;
+  }
+
+  .conv-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .conv-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .conv-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 0 30px rgba(0,212,232,0.06);
+  }
+  .conv-card:hover::before { opacity: 1; }
+
+  .conv-card-header {
+    padding: 12px 16px;
+    background: var(--bg-card2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .conv-unit-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+  }
+  .conv-tag {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    background: rgba(0,212,232,0.05);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  .conv-body { padding: 18px 16px; }
+
+  /* Input rows */
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .unit-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    min-width: 90px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .num-input {
+    flex: 1;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield;
+  }
+  .num-input::-webkit-inner-spin-button,
+  .num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .num-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 2px rgba(0,212,232,0.1), inset 0 0 8px rgba(0,212,232,0.05);
+  }
+  .num-input.si-input:focus   { border-color: var(--amber); box-shadow: 0 0 0 2px rgba(232,160,32,0.1); }
+  .num-input.imp-input:focus  { border-color: var(--cyan);  }
+
+  .sys-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 7px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .badge-si  { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-dim); }
+  .badge-imp { background: var(--cyan-dim);  color: var(--cyan);  border: 1px solid var(--cyan-dim); }
+
+  .arrow-sep {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin: 6px 0;
+    letter-spacing: 4px;
+  }
+
+  /* Formula */
+  .formula-box {
+    margin-top: 14px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 3px 3px 0;
+    padding: 10px 14px;
+  }
+  .formula-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--amber-dim);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  .formula-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    line-height: 1.7;
+  }
+
+  /* Temp special layout */
+  .temp-note {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    header, .tabs-wrap, main, footer { padding-left: 16px; padding-right: 16px; }
+    .converters-grid { grid-template-columns: 1fr; }
+    .header-title { font-size: 16px; letter-spacing: 3px; }
+    .unit-label { min-width: 70px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="#00d4e8" stroke-width="1.5"/>
+      <line x1="14" y1="2" x2="14" y2="26" stroke="#00d4e8" stroke-width="1" stroke-dasharray="2 3"/>
+      <line x1="2" y1="14" x2="26" y2="14" stroke="#00d4e8" stroke-width="1" stroke-dasharray="2 3"/>
+      <circle cx="14" cy="14" r="3" fill="#00d4e8" opacity="0.8"/>
+      <path d="M4 14 Q14 4 24 14 Q14 24 4 14Z" stroke="#e8a020" stroke-width="1" fill="none"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <div class="header-title">UNIT CONVERTER</div>
+    <div class="header-sub">SI ←→ IMPERIAL · SISTEMA INTERNAZIONALE · STANDARD AERONAUTICO</div>
+  </div>
+  <div class="header-status">
+    <div><span class="status-dot"></span>SISTEMA OPERATIVO</div>
+    <div>REV 2.4.1 · ICAO/ANSI</div>
+    <div id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs-wrap" id="tabs">
+  <button class="tab-btn active" data-cat="lunghezza"><span class="tab-icon">📏</span>LUNGHEZZA</button>
+  <button class="tab-btn" data-cat="massa"><span class="tab-icon">⚖️</span>MASSA</button>
+  <button class="tab-btn" data-cat="forza"><span class="tab-icon">⚡</span>FORZA</button>
+  <button class="tab-btn" data-cat="pressione"><span class="tab-icon">🔵</span>PRESSIONE</button>
+  <button class="tab-btn" data-cat="velocita"><span class="tab-icon">🚀</span>VELOCITÀ</button>
+  <button class="tab-btn" data-cat="temperatura"><span class="tab-icon">🌡️</span>TEMPERATURA</button>
+  <button class="tab-btn" data-cat="potenza"><span class="tab-icon">⚙️</span>POTENZA</button>
+  <button class="tab-btn" data-cat="area"><span class="tab-icon">⬜</span>AREA</button>
+</div>
+
+<main>
+
+  <!-- ═══════════ LUNGHEZZA ═══════════ -->
+  <div class="category-panel active" id="panel-lunghezza">
+    <div class="category-header">
+      <span class="category-label">// LUNGHEZZA · LENGTH</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <!-- metro / piede -->
+      <div class="conv-card">
+        <div class="conv-card-header">
+          <span class="conv-unit-name">METRO ↔ PIEDE</span>
+          <span class="conv-tag">m · ft</span>
+        </div>
+        <div class="conv-body">
+          <div class="input-row">
+            <span class="unit-label">METRO [m]</span>
+            <input class="num-input si-input" id="m_m" type="number" placeholder="0" oninput="conv('m_m','m_ft',v=>v*3.28084,'m_ft')">
+            <span class="sys-badge badge-si">SI</span>
+          </div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row">
+            <span class="unit-label">PIEDE [ft]</span>
+            <input class="num-input imp-input" id="m_ft" type="number" placeholder="0" oninput="conv('m_ft','m_m',v=>v/3.28084,'m_m')">
+            <span class="sys-badge badge-imp">IMP</span>
+          </div>
+          <div class="formula-box">
+            <div class="formula-label">▸ FORMULA</div>
+            <div class="formula-text">ft = m × 3.28084<br>m = ft ÷ 3.28084</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- metro / pollice -->
+      <div class="conv-card">
+        <div class="conv-card-header">
+          <span class="conv-unit-name">METRO ↔ POLLICE</span>
+          <span class="conv-tag">m · in</span>
+        </div>
+        <div class="conv-body">
+          <div class="input-row">
+            <span class="unit-label">METRO [m]</span>
+            <input class="num-input si-input" id="m_m2" type="number" placeholder="0" oninput="conv('m_m2','m_in',v=>v*39.3701)">
+            <span class="sys-badge badge-si">SI</span>
+          </div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row">
+            <span class="unit-label">POLLICE [in]</span>
+            <input class="num-input imp-input" id="m_in" type="number" placeholder="0" oninput="conv('m_in','m_m2',v=>v/39.3701)">
+            <span class="sys-badge badge-imp">IMP</span>
+          </div>
+          <div class="formula-box">
+            <div class="formula-label">▸ FORMULA</div>
+            <div class="formula-text">in = m × 39.3701<br>m = in ÷ 39.3701</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- km / miglio -->
+      <div class="conv-card">
+        <div class="conv-card-header">
+          <span class="conv-unit-name">CHILOMETRO ↔ MIGLIO</span>
+          <span class="conv-tag">km · mi</span>
+        </div>
+        <div class="conv-body">
+          <div class="input-row">
+            <span class="unit-label">CHILOM. [km]</span>
+            <input class="num-input si-input" id="km_km" type="number" placeholder="0" oninput="conv('km_km','km_mi',v=>v*0.621371)">
+            <span class="sys-badge badge-si">SI</span>
+          </div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row">
+            <span class="unit-label">MIGLIO [mi]</span>
+            <input class="num-input imp-input" id="km_mi" type="number" placeholder="0" oninput="conv('km_mi','km_km',v=>v/0.621371)">
+            <span class="sys-badge badge-imp">IMP</span>
+          </div>
+          <div class="formula-box">
+            <div class="formula-label">▸ FORMULA</div>
+            <div class="formula-text">mi = km × 0.621371<br>km = mi ÷ 0.621371</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- m / yard -->
+      <div class="conv-card">
+        <div class="conv-card-header">
+          <span class="conv-unit-name">METRO ↔ YARD</span>
+          <span class="conv-tag">m · yd</span>
+        </div>
+        <div class="conv-body">
+          <div class="input-row">
+            <span class="unit-label">METRO [m]</span>
+            <input class="num-input si-input" id="yd_m" type="number" placeholder="0" oninput="conv('yd_m','yd_yd',v=>v*1.09361)">
+            <span class="sys-badge badge-si">SI</span>
+          </div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row">
+            <span class="unit-label">YARD [yd]</span>
+            <input class="num-input imp-input" id="yd_yd" type="number" placeholder="0" oninput="conv('yd_yd','yd_m',v=>v/1.09361)">
+            <span class="sys-badge badge-imp">IMP</span>
+          </div>
+          <div class="formula-box">
+            <div class="formula-label">▸ FORMULA</div>
+            <div class="formula-text">yd = m × 1.09361<br>m = yd ÷ 1.09361</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- m / miglio nautico -->
+      <div class="conv-card">
+        <div class="conv-card-header">
+          <span class="conv-unit-name">METRO ↔ MIGLIO NAUTICO</span>
+          <span class="conv-tag">m · NM</span>
+        </div>
+        <div class="conv-body">
+          <div class="input-row">
+            <span class="unit-label">METRO [m]</span>
+            <input class="num-input si-input" id="nm_m" type="number" placeholder="0" oninput="conv('nm_m','nm_nm',v=>v/1852)">
+            <span class="sys-badge badge-si">SI</span>
+          </div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row">
+            <span class="unit-label">NAUT.MI [NM]</span>
+            <input class="num-input imp-input" id="nm_nm" type="number" placeholder="0" oninput="conv('nm_nm','nm_m',v=>v*1852)">
+            <span class="sys-badge badge-imp">IMP</span>
+          </div>
+          <div class="formula-box">
+            <div class="formula-label">▸ FORMULA</div>
+            <div class="formula-text">NM = m ÷ 1852<br>m = NM × 1852<br>(1 NM = 1852 m esatto)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ MASSA ═══════════ -->
+  <div class="category-panel" id="panel-massa">
+    <div class="category-header">
+      <span class="category-label">// MASSA · MASS</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">CHILOGRAMMO ↔ LIBBRA</span><span class="conv-tag">kg · lb</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KILOG. [kg]</span><input class="num-input si-input" id="kg_kg" type="number" placeholder="0" oninput="conv('kg_kg','kg_lb',v=>v*2.20462)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">LIBBRA [lb]</span><input class="num-input imp-input" id="kg_lb" type="number" placeholder="0" oninput="conv('kg_lb','kg_kg',v=>v/2.20462)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">lb = kg × 2.20462<br>kg = lb ÷ 2.20462</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">GRAMMO ↔ ONCIA</span><span class="conv-tag">g · oz</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">GRAMMO [g]</span><input class="num-input si-input" id="g_g" type="number" placeholder="0" oninput="conv('g_g','g_oz',v=>v*0.035274)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">ONCIA [oz]</span><input class="num-input imp-input" id="g_oz" type="number" placeholder="0" oninput="conv('g_oz','g_g',v=>v/0.035274)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">oz = g × 0.035274<br>g = oz ÷ 0.035274</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">TONN. METRIC. ↔ TON SHORT</span><span class="conv-tag">t · tn</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">TONN. [t]</span><input class="num-input si-input" id="t_t" type="number" placeholder="0" oninput="conv('t_t','t_tn',v=>v*1.10231)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">SHORT TON</span><input class="num-input imp-input" id="t_tn" type="number" placeholder="0" oninput="conv('t_tn','t_t',v=>v/1.10231)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">ton = t × 1.10231<br>t = ton ÷ 1.10231<br>(1 t = 1000 kg; 1 short ton ≈ 907.185 kg)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">KILOGRAMMO ↔ STONE</span><span class="conv-tag">kg · st</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KILOG. [kg]</span><input class="num-input si-input" id="st_kg" type="number" placeholder="0" oninput="conv('st_kg','st_st',v=>v*0.157473)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">STONE [st]</span><input class="num-input imp-input" id="st_st" type="number" placeholder="0" oninput="conv('st_st','st_kg',v=>v/0.157473)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">st = kg × 0.157473<br>kg = st ÷ 0.157473<br>(1 stone = 14 lb = 6.35029 kg)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ FORZA ═══════════ -->
+  <div class="category-panel" id="panel-forza">
+    <div class="category-header">
+      <span class="category-label">// FORZA · FORCE</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">NEWTON ↔ LIBBRA-FORZA</span><span class="conv-tag">N · lbf</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">NEWTON [N]</span><input class="num-input si-input" id="n_n" type="number" placeholder="0" oninput="conv('n_n','n_lbf',v=>v*0.224809)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">LBF [lbf]</span><input class="num-input imp-input" id="n_lbf" type="number" placeholder="0" oninput="conv('n_lbf','n_n',v=>v/0.224809)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">lbf = N × 0.224809<br>N = lbf ÷ 0.224809<br>(1 lbf = 4.44822 N)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">KILONEWTON ↔ KILO LIBB.-FORZA</span><span class="conv-tag">kN · kip</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KILONEW. [kN]</span><input class="num-input si-input" id="kn_kn" type="number" placeholder="0" oninput="conv('kn_kn','kn_kip',v=>v*0.224809)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">KIP [kip]</span><input class="num-input imp-input" id="kn_kip" type="number" placeholder="0" oninput="conv('kn_kip','kn_kn',v=>v/0.224809)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">kip = kN × 0.224809<br>kN = kip ÷ 0.224809<br>(1 kip = 1000 lbf ≈ 4.44822 kN)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">NEWTON ↔ DINA</span><span class="conv-tag">N · dyn</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">NEWTON [N]</span><input class="num-input si-input" id="dyn_n" type="number" placeholder="0" oninput="conv('dyn_n','dyn_d',v=>v*100000)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">DINA [dyn]</span><input class="num-input imp-input" id="dyn_d" type="number" placeholder="0" oninput="conv('dyn_d','dyn_n',v=>v/100000)"><span class="sys-badge badge-imp">CGS</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">dyn = N × 100000<br>N = dyn ÷ 100000<br>(1 N = 10⁵ dyne; sistema CGS)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ PRESSIONE ═══════════ -->
+  <div class="category-panel" id="panel-pressione">
+    <div class="category-header">
+      <span class="category-label">// PRESSIONE · PRESSURE</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">PASCAL ↔ PSI</span><span class="conv-tag">Pa · psi</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">PASCAL [Pa]</span><input class="num-input si-input" id="pa_pa" type="number" placeholder="0" oninput="conv('pa_pa','pa_psi',v=>v*0.000145038)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">PSI</span><input class="num-input imp-input" id="pa_psi" type="number" placeholder="0" oninput="conv('pa_psi','pa_pa',v=>v/0.000145038)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">psi = Pa × 0.000145038<br>Pa = psi ÷ 0.000145038<br>(1 psi ≈ 6894.76 Pa)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">BAR ↔ PSI</span><span class="conv-tag">bar · psi</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">BAR</span><input class="num-input si-input" id="bar_bar" type="number" placeholder="0" oninput="conv('bar_bar','bar_psi',v=>v*14.5038)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">PSI</span><input class="num-input imp-input" id="bar_psi" type="number" placeholder="0" oninput="conv('bar_psi','bar_bar',v=>v/14.5038)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">psi = bar × 14.5038<br>bar = psi ÷ 14.5038<br>(1 bar = 100000 Pa)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">ATM ↔ PSI</span><span class="conv-tag">atm · psi</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">ATM</span><input class="num-input si-input" id="atm_atm" type="number" placeholder="0" oninput="conv('atm_atm','atm_psi',v=>v*14.6959)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">PSI</span><input class="num-input imp-input" id="atm_psi" type="number" placeholder="0" oninput="conv('atm_psi','atm_atm',v=>v/14.6959)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">psi = atm × 14.6959<br>atm = psi ÷ 14.6959<br>(1 atm = 101325 Pa esatto)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">kPa ↔ IN HG (mercurio)</span><span class="conv-tag">kPa · inHg</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KILOPASCAL</span><input class="num-input si-input" id="kpa_kpa" type="number" placeholder="0" oninput="conv('kpa_kpa','kpa_inhg',v=>v*0.295301)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">IN HG [inHg]</span><input class="num-input imp-input" id="kpa_inhg" type="number" placeholder="0" oninput="conv('kpa_inhg','kpa_kpa',v=>v/0.295301)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">inHg = kPa × 0.295301<br>kPa = inHg ÷ 0.295301<br>(usato in alt. barometrica ICAO)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ VELOCITÀ ═══════════ -->
+  <div class="category-panel" id="panel-velocita">
+    <div class="category-header">
+      <span class="category-label">// VELOCITÀ · SPEED</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">m/s ↔ ft/s</span><span class="conv-tag">m/s · fps</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">M/S</span><input class="num-input si-input" id="ms_ms" type="number" placeholder="0" oninput="conv('ms_ms','ms_fps',v=>v*3.28084)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">FPS [ft/s]</span><input class="num-input imp-input" id="ms_fps" type="number" placeholder="0" oninput="conv('ms_fps','ms_ms',v=>v/3.28084)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">ft/s = (m/s) × 3.28084<br>m/s = (ft/s) ÷ 3.28084</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">km/h ↔ mph</span><span class="conv-tag">km/h · mph</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KM/H</span><input class="num-input si-input" id="kmh_kmh" type="number" placeholder="0" oninput="conv('kmh_kmh','kmh_mph',v=>v*0.621371)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">MPH</span><input class="num-input imp-input" id="kmh_mph" type="number" placeholder="0" oninput="conv('kmh_mph','kmh_kmh',v=>v/0.621371)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">mph = (km/h) × 0.621371<br>km/h = mph ÷ 0.621371</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">m/s ↔ NODO (knot)</span><span class="conv-tag">m/s · kt</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">M/S</span><input class="num-input si-input" id="kt_ms" type="number" placeholder="0" oninput="conv('kt_ms','kt_kt',v=>v*1.94384)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">NODO [kt]</span><input class="num-input imp-input" id="kt_kt" type="number" placeholder="0" oninput="conv('kt_kt','kt_ms',v=>v/1.94384)"><span class="sys-badge badge-imp">NAV</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">kt = (m/s) × 1.94384<br>m/s = kt ÷ 1.94384<br>(1 kt = 1 NM/h = 0.514444 m/s)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">m/s ↔ MACH (ISA SL)</span><span class="conv-tag">m/s · Ma</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">M/S</span><input class="num-input si-input" id="ma_ms" type="number" placeholder="0" oninput="conv('ma_ms','ma_ma',v=>v/340.29)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">MACH [Ma]</span><input class="num-input imp-input" id="ma_ma" type="number" placeholder="0" oninput="conv('ma_ma','ma_ms',v=>v*340.29)"><span class="sys-badge badge-imp">AER</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">Ma = (m/s) ÷ 340.29<br>m/s = Ma × 340.29<br>(velocità suono ISA SL: 340.29 m/s)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ TEMPERATURA ═══════════ -->
+  <div class="category-panel" id="panel-temperatura">
+    <div class="category-header">
+      <span class="category-label">// TEMPERATURA · TEMPERATURE</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">CELSIUS ↔ FAHRENHEIT</span><span class="conv-tag">°C · °F</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">CELSIUS [°C]</span><input class="num-input si-input" id="cf_c" type="number" placeholder="0" oninput="tempConv('cf_c','cf_f','ctof')"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">FAHRENH. [°F]</span><input class="num-input imp-input" id="cf_f" type="number" placeholder="0" oninput="tempConv('cf_f','cf_c','ftoc')"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">°F = (°C × 9/5) + 32<br>°C = (°F − 32) × 5/9</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">KELVIN ↔ FAHRENHEIT</span><span class="conv-tag">K · °F</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KELVIN [K]</span><input class="num-input si-input" id="kf_k" type="number" placeholder="0" oninput="tempConv('kf_k','kf_f','ktof')"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">FAHRENH. [°F]</span><input class="num-input imp-input" id="kf_f" type="number" placeholder="0" oninput="tempConv('kf_f','kf_k','ftok')"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">°F = (K − 273.15) × 9/5 + 32<br>K = (°F − 32) × 5/9 + 273.15</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">KELVIN ↔ CELSIUS</span><span class="conv-tag">K · °C</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KELVIN [K]</span><input class="num-input si-input" id="kc_k" type="number" placeholder="0" oninput="tempConv('kc_k','kc_c','ktoc')"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">CELSIUS [°C]</span><input class="num-input imp-input" id="kc_c" type="number" placeholder="0" oninput="tempConv('kc_c','kc_k','ctok')"><span class="sys-badge badge-imp">SI</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">°C = K − 273.15<br>K = °C + 273.15<br>(0 K = −273.15 °C = zero assoluto)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">RANKINE ↔ KELVIN</span><span class="conv-tag">°R · K</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">RANKINE [°R]</span><input class="num-input imp-input" id="rk_r" type="number" placeholder="0" oninput="tempConv('rk_r','rk_k','rtok')"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">KELVIN [K]</span><input class="num-input si-input" id="rk_k" type="number" placeholder="0" oninput="tempConv('rk_k','rk_r','ktor')"><span class="sys-badge badge-si">SI</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">K = °R × 5/9<br>°R = K × 9/5<br>(Rankine: scala assoluta imperiale)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ POTENZA ═══════════ -->
+  <div class="category-panel" id="panel-potenza">
+    <div class="category-header">
+      <span class="category-label">// POTENZA · POWER</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">WATT ↔ CAVALLI VAPORE</span><span class="conv-tag">W · HP</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">WATT [W]</span><input class="num-input si-input" id="w_w" type="number" placeholder="0" oninput="conv('w_w','w_hp',v=>v*0.00134102)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">HP</span><input class="num-input imp-input" id="w_hp" type="number" placeholder="0" oninput="conv('w_hp','w_w',v=>v/0.00134102)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">HP = W × 0.00134102<br>W = HP ÷ 0.00134102<br>(1 HP = 745.7 W — HP meccanico)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">KILOWATT ↔ HP</span><span class="conv-tag">kW · HP</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">KILOWATT [kW]</span><input class="num-input si-input" id="kw_kw" type="number" placeholder="0" oninput="conv('kw_kw','kw_hp',v=>v*1.34102)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">HP</span><input class="num-input imp-input" id="kw_hp" type="number" placeholder="0" oninput="conv('kw_hp','kw_kw',v=>v/1.34102)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">HP = kW × 1.34102<br>kW = HP ÷ 1.34102<br>(1 kW = 1000 W)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">WATT ↔ BTU/ORE</span><span class="conv-tag">W · BTU/h</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">WATT [W]</span><input class="num-input si-input" id="btu_w" type="number" placeholder="0" oninput="conv('btu_w','btu_b',v=>v*3.41214)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">BTU/h</span><input class="num-input imp-input" id="btu_b" type="number" placeholder="0" oninput="conv('btu_b','btu_w',v=>v/3.41214)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">BTU/h = W × 3.41214<br>W = (BTU/h) ÷ 3.41214<br>(1 BTU/h = 0.29307 W)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">WATT ↔ FOOT-POUND/MIN</span><span class="conv-tag">W · ft·lbf/min</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">WATT [W]</span><input class="num-input si-input" id="fpm_w" type="number" placeholder="0" oninput="conv('fpm_w','fpm_f',v=>v*44.2537)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">ft·lbf/min</span><input class="num-input imp-input" id="fpm_f" type="number" placeholder="0" oninput="conv('fpm_f','fpm_w',v=>v/44.2537)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">ft·lbf/min = W × 44.2537<br>W = (ft·lbf/min) ÷ 44.2537<br>(1 HP = 33000 ft·lbf/min)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ AREA ═══════════ -->
+  <div class="category-panel" id="panel-area">
+    <div class="category-header">
+      <span class="category-label">// AREA · SURFACE</span>
+      <div class="category-line"></div>
+    </div>
+    <div class="converters-grid">
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">m² ↔ ft²</span><span class="conv-tag">m² · ft²</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">METRO² [m²]</span><input class="num-input si-input" id="m2_m2" type="number" placeholder="0" oninput="conv('m2_m2','m2_ft2',v=>v*10.7639)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">PIEDE² [ft²]</span><input class="num-input imp-input" id="m2_ft2" type="number" placeholder="0" oninput="conv('m2_ft2','m2_m2',v=>v/10.7639)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">ft² = m² × 10.7639<br>m² = ft² ÷ 10.7639</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">cm² ↔ in²</span><span class="conv-tag">cm² · in²</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">CENTIM.² [cm²]</span><input class="num-input si-input" id="cm2_cm2" type="number" placeholder="0" oninput="conv('cm2_cm2','cm2_in2',v=>v*0.155)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">POLLICE² [in²]</span><input class="num-input imp-input" id="cm2_in2" type="number" placeholder="0" oninput="conv('cm2_in2','cm2_cm2',v=>v/0.155)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">in² = cm² × 0.155<br>cm² = in² ÷ 0.155<br>(1 in² = 6.4516 cm²)</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">km² ↔ mi²</span><span class="conv-tag">km² · mi²</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">CHILOM.² [km²]</span><input class="num-input si-input" id="km2_km2" type="number" placeholder="0" oninput="conv('km2_km2','km2_mi2',v=>v*0.386102)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">MIGLIO² [mi²]</span><input class="num-input imp-input" id="km2_mi2" type="number" placeholder="0" oninput="conv('km2_mi2','km2_km2',v=>v/0.386102)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">mi² = km² × 0.386102<br>km² = mi² ÷ 0.386102</div></div>
+        </div>
+      </div>
+
+      <div class="conv-card">
+        <div class="conv-card-header"><span class="conv-unit-name">ETTARO ↔ ACRO</span><span class="conv-tag">ha · ac</span></div>
+        <div class="conv-body">
+          <div class="input-row"><span class="unit-label">ETTARO [ha]</span><input class="num-input si-input" id="ha_ha" type="number" placeholder="0" oninput="conv('ha_ha','ha_ac',v=>v*2.47105)"><span class="sys-badge badge-si">SI</span></div>
+          <div class="arrow-sep">⇅</div>
+          <div class="input-row"><span class="unit-label">ACRO [ac]</span><input class="num-input imp-input" id="ha_ac" type="number" placeholder="0" oninput="conv('ha_ac','ha_ha',v=>v/2.47105)"><span class="sys-badge badge-imp">IMP</span></div>
+          <div class="formula-box"><div class="formula-label">▸ FORMULA</div><div class="formula-text">ac = ha × 2.47105<br>ha = ac ÷ 2.47105<br>(1 ha = 10000 m² = 2.47105 acri)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span class="footer-text">SISTEMA INTERNAZIONALE (SI) ↔ SISTEMA IMPERIALE · DATI ICAO/ANSI</span>
+  <span class="footer-text">TUTTI I CALCOLI ESEGUITI LOCALMENTE · NO SERVER</span>
+</footer>
+
+<script>
+  // ── Clock ──
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toISOString().substr(11,8) + ' UTC';
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── Tabs ──
+  document.getElementById('tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.category-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.cat).classList.add('active');
+  });
+
+  // ── Generic converter ──
+  function fmt(v) {
+    if (v === '' || v === null || isNaN(v)) return '';
+    // Max 8 significant digits
+    let n = parseFloat(v);
+    if (Math.abs(n) >= 1e9 || (Math.abs(n) < 1e-5 && n !== 0)) {
+      return n.toExponential(5);
+    }
+    return parseFloat(n.toPrecision(8)).toString();
+  }
+
+  function conv(fromId, toId, fn) {
+    const fromEl = document.getElementById(fromId);
+    const toEl   = document.getElementById(toId);
+    const val = fromEl.value;
+    if (val === '' || val === '-') { toEl.value = ''; return; }
+    const result = fn(parseFloat(val));
+    toEl.value = fmt(result);
+  }
+
+  // ── Temperature converter (non-linear) ──
+  const tempFns = {
+    ctof: c => c * 9/5 + 32,
+    ftoc: f => (f - 32) * 5/9,
+    ktof: k => (k - 273.15) * 9/5 + 32,
+    ftok: f => (f - 32) * 5/9 + 273.15,
+    ktoc: k => k - 273.15,
+    ctok: c => c + 273.15,
+    rtok: r => r * 5/9,
+    ktor: k => k * 9/5,
+  };
+
+  function tempConv(fromId, toId, fnKey) {
+    const fromEl = document.getElementById(fromId);
+    const toEl   = document.getElementById(toId);
+    const val = fromEl.value;
+    if (val === '' || val === '-') { toEl.value = ''; return; }
+    const result = tempFns[fnKey](parseFloat(val));
+    toEl.value = fmt(result);
+  }
+</script>
+</body>
+</html>
