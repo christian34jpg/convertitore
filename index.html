@@ -3,31 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SI ⇄ IMPERIAL · UNIT CONVERTER</title>
+<title>CAPUANO · UNIT CONVERTER · MGS CODEC</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Orbitron:wght@400;700;900&display=swap');
 
   :root {
-    --bg-void: #050709;
-    --bg-panel: #090d12;
-    --bg-card: #0d1520;
-    --bg-card2: #101a24;
-    --amber: #e8a020;
-    --amber-dim: #7a4f08;
-    --amber-glow: rgba(232,160,32,0.15);
-    --cyan: #00d4e8;
-    --cyan-dim: #004d55;
-    --cyan-glow: rgba(0,212,232,0.12);
-    --green: #39ff8a;
-    --green-dim: #0d3d21;
-    --red: #ff3c3c;
-    --text-primary: #c8d8e8;
-    --text-dim: #4a6070;
-    --text-bright: #e8f4ff;
-    --border: #1a2d40;
-    --border-bright: #2a4560;
-    --scanline: rgba(0,212,232,0.03);
-    --grid-line: rgba(0,212,232,0.05);
+    --bg-void: #000d00;
+    --bg-panel: #001400;
+    --bg-card: #001a00;
+    --bg-card2: #002000;
+    --amber: #00ff41;
+    --amber-dim: #004d12;
+    --amber-glow: rgba(0,255,65,0.15);
+    --cyan: #00e040;
+    --cyan-dim: #003d10;
+    --cyan-glow: rgba(0,224,64,0.12);
+    --green: #00ff41;
+    --green-dim: #003d10;
+    --red: #00ff41;
+    --text-primary: #00cc33;
+    --text-dim: #005520;
+    --text-bright: #00ff41;
+    --border: #003a10;
+    --border-bright: #006622;
+    --scanline: rgba(0,255,65,0.04);
+    --grid-line: rgba(0,255,65,0.07);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,38 +35,39 @@
   body {
     background-color: var(--bg-void);
     color: var(--text-primary);
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Share Tech Mono', monospace;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
   }
 
-  /* Grid background */
+  /* Radar grid background */
   body::before {
     content: '';
     position: fixed; inset: 0;
     background-image:
+      radial-gradient(ellipse at center, rgba(0,255,65,0.04) 0%, transparent 70%),
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-size: 100% 100%, 40px 40px, 40px 40px;
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Scanlines */
+  /* Phosphor scanlines */
   body::after {
     content: '';
     position: fixed; inset: 0;
     background: repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 2px,
-      var(--scanline) 2px,
+      transparent 3px,
+      var(--scanline) 3px,
       var(--scanline) 4px
     );
     pointer-events: none;
     z-index: 999;
-    animation: scanRoll 8s linear infinite;
+    animation: scanRoll 6s linear infinite;
   }
 
   @keyframes scanRoll {
@@ -78,45 +79,69 @@
   header {
     position: relative;
     z-index: 10;
-    padding: 28px 40px 20px;
+    padding: 20px 40px 16px;
     border-bottom: 1px solid var(--border-bright);
-    background: linear-gradient(180deg, rgba(0,212,232,0.06) 0%, transparent 100%);
+    background: linear-gradient(180deg, rgba(0,255,65,0.07) 0%, transparent 100%);
     display: flex;
     align-items: flex-end;
     gap: 24px;
   }
 
+  /* Radar sweep badge */
   .logo-badge {
     width: 52px; height: 52px;
-    border: 2px solid var(--cyan);
+    border: 2px solid var(--green);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle, rgba(0,212,232,0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0,255,65,0.1) 0%, transparent 70%);
     flex-shrink: 0;
-    animation: pulseBadge 3s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+    animation: pulseBadge 2s ease-in-out infinite;
+  }
+  .logo-badge::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 50%; height: 2px;
+    background: linear-gradient(90deg, rgba(0,255,65,0.9), transparent);
+    transform-origin: left center;
+    animation: radarSweep 2.5s linear infinite;
+  }
+  @keyframes radarSweep {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
   @keyframes pulseBadge {
-    0%,100% { box-shadow: 0 0 8px var(--cyan), inset 0 0 8px rgba(0,212,232,0.1); }
-    50%      { box-shadow: 0 0 20px var(--cyan), inset 0 0 16px rgba(0,212,232,0.2); }
+    0%,100% { box-shadow: 0 0 8px var(--green), inset 0 0 8px rgba(0,255,65,0.1); }
+    50%      { box-shadow: 0 0 22px var(--green), inset 0 0 18px rgba(0,255,65,0.25); }
   }
-  .logo-badge svg { width: 28px; height: 28px; }
+  .logo-badge svg { width: 28px; height: 28px; position: relative; z-index: 1; }
 
   .header-text {}
+  .header-operator {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+  }
   .header-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 6px;
-    color: var(--cyan);
-    text-shadow: 0 0 20px var(--cyan);
+    font-family: 'VT323', monospace;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: var(--green);
+    text-shadow: 0 0 16px var(--green), 0 0 32px rgba(0,255,65,0.4);
     line-height: 1;
   }
   .header-sub {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--amber);
-    letter-spacing: 3px;
-    margin-top: 5px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-top: 4px;
   }
 
   .header-status {
@@ -136,14 +161,14 @@
     margin-right: 6px;
     animation: blink 1.4s step-end infinite;
   }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
 
   /* ── CATEGORY TABS ── */
   .tabs-wrap {
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgba(5,7,9,0.92);
+    background: rgba(0,10,0,0.95);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
     padding: 0 40px;
@@ -157,9 +182,9 @@
 
   .tab-btn {
     position: relative;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -168,25 +193,25 @@
     padding: 14px 18px;
     cursor: pointer;
     white-space: nowrap;
-    transition: color 0.2s;
+    transition: color 0.2s, text-shadow 0.2s;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
   }
-  .tab-btn .tab-icon { font-size: 16px; }
+  .tab-btn .tab-icon { font-size: 14px; }
   .tab-btn::after {
     content: '';
     position: absolute;
     bottom: 0; left: 50%;
     transform: translateX(-50%);
     width: 0; height: 2px;
-    background: var(--cyan);
+    background: var(--green);
     transition: width 0.25s ease;
-    box-shadow: 0 0 8px var(--cyan);
+    box-shadow: 0 0 8px var(--green);
   }
   .tab-btn:hover { color: var(--text-primary); }
-  .tab-btn.active { color: var(--cyan); }
+  .tab-btn.active { color: var(--green); text-shadow: 0 0 10px var(--green); }
   .tab-btn.active::after { width: 80%; }
 
   /* ── MAIN ── */
@@ -209,17 +234,17 @@
     margin-bottom: 32px;
   }
   .category-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
     letter-spacing: 4px;
-    color: var(--amber);
-    text-shadow: 0 0 10px var(--amber);
+    color: var(--green);
+    text-shadow: 0 0 12px var(--green);
   }
   .category-line {
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, var(--amber-dim), transparent);
+    background: linear-gradient(90deg, var(--green-dim), transparent);
   }
 
   /* ── CONVERTER CARD ── */
@@ -232,7 +257,7 @@
   .conv-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 2px;
     overflow: hidden;
     transition: border-color 0.2s, box-shadow 0.2s;
     position: relative;
@@ -242,13 +267,13 @@
     position: absolute;
     top: 0; left: 0;
     right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
     opacity: 0;
     transition: opacity 0.2s;
   }
   .conv-card:hover {
     border-color: var(--border-bright);
-    box-shadow: 0 0 30px rgba(0,212,232,0.06);
+    box-shadow: 0 0 20px rgba(0,255,65,0.08);
   }
   .conv-card:hover::before { opacity: 1; }
 
@@ -264,7 +289,7 @@
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
     letter-spacing: 2px;
-    color: var(--cyan);
+    color: var(--green);
   }
   .conv-tag {
     margin-left: auto;
@@ -272,7 +297,7 @@
     font-size: 9px;
     letter-spacing: 1px;
     color: var(--text-dim);
-    background: rgba(0,212,232,0.05);
+    background: rgba(0,255,65,0.04);
     border: 1px solid var(--border);
     padding: 2px 8px;
     border-radius: 2px;
@@ -300,10 +325,10 @@
 
   .num-input {
     flex: 1;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,5,0,0.6);
     border: 1px solid var(--border);
-    border-radius: 3px;
-    color: var(--text-bright);
+    border-radius: 2px;
+    color: var(--green);
     font-family: 'Share Tech Mono', monospace;
     font-size: 15px;
     padding: 9px 12px;
@@ -314,28 +339,30 @@
   .num-input::-webkit-inner-spin-button,
   .num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
   .num-input:focus {
-    border-color: var(--cyan);
-    box-shadow: 0 0 0 2px rgba(0,212,232,0.1), inset 0 0 8px rgba(0,212,232,0.05);
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(0,255,65,0.12), inset 0 0 8px rgba(0,255,65,0.05);
+    color: var(--text-bright);
+    text-shadow: 0 0 8px var(--green);
   }
-  .num-input.si-input:focus   { border-color: var(--amber); box-shadow: 0 0 0 2px rgba(232,160,32,0.1); }
-  .num-input.imp-input:focus  { border-color: var(--cyan);  }
+  .num-input.si-input:focus   { border-color: var(--green); box-shadow: 0 0 0 2px rgba(0,255,65,0.15); }
+  .num-input.imp-input:focus  { border-color: var(--green); }
 
   .sys-badge {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 8px;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 1px;
     padding: 3px 7px;
     border-radius: 2px;
     flex-shrink: 0;
   }
-  .badge-si  { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-dim); }
-  .badge-imp { background: var(--cyan-dim);  color: var(--cyan);  border: 1px solid var(--cyan-dim); }
+  .badge-si  { background: rgba(0,255,65,0.08); color: var(--green); border: 1px solid var(--green-dim); }
+  .badge-imp { background: rgba(0,255,65,0.04); color: var(--text-dim); border: 1px solid var(--border); }
 
   .arrow-sep {
     text-align: center;
     color: var(--text-dim);
-    font-size: 12px;
+    font-size: 14px;
     margin: 6px 0;
     letter-spacing: 4px;
   }
@@ -343,24 +370,24 @@
   /* Formula */
   .formula-box {
     margin-top: 14px;
-    background: rgba(0,0,0,0.35);
+    background: rgba(0,5,0,0.5);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--amber);
-    border-radius: 0 3px 3px 0;
+    border-left: 2px solid var(--green-dim);
+    border-radius: 0 2px 2px 0;
     padding: 10px 14px;
   }
   .formula-label {
     font-family: 'Share Tech Mono', monospace;
     font-size: 9px;
     letter-spacing: 2px;
-    color: var(--amber-dim);
+    color: var(--text-dim);
     margin-bottom: 5px;
     text-transform: uppercase;
   }
   .formula-text {
     font-family: 'Share Tech Mono', monospace;
     font-size: 12px;
-    color: var(--amber);
+    color: var(--text-dim);
     line-height: 1.7;
   }
 
@@ -395,7 +422,7 @@
   @media (max-width: 700px) {
     header, .tabs-wrap, main, footer { padding-left: 16px; padding-right: 16px; }
     .converters-grid { grid-template-columns: 1fr; }
-    .header-title { font-size: 16px; letter-spacing: 3px; }
+    .header-title { font-size: 22px; letter-spacing: 2px; }
     .unit-label { min-width: 70px; font-size: 9px; }
   }
 </style>
@@ -405,20 +432,23 @@
 <header>
   <div class="logo-badge">
     <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="14" cy="14" r="12" stroke="#00d4e8" stroke-width="1.5"/>
-      <line x1="14" y1="2" x2="14" y2="26" stroke="#00d4e8" stroke-width="1" stroke-dasharray="2 3"/>
-      <line x1="2" y1="14" x2="26" y2="14" stroke="#00d4e8" stroke-width="1" stroke-dasharray="2 3"/>
-      <circle cx="14" cy="14" r="3" fill="#00d4e8" opacity="0.8"/>
-      <path d="M4 14 Q14 4 24 14 Q14 24 4 14Z" stroke="#e8a020" stroke-width="1" fill="none"/>
+      <circle cx="14" cy="14" r="11" stroke="#00ff41" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="#00ff41" stroke-width="0.5" opacity="0.5"/>
+      <circle cx="14" cy="14" r="3" stroke="#00ff41" stroke-width="0.5" opacity="0.3"/>
+      <line x1="14" y1="3" x2="14" y2="25" stroke="#00ff41" stroke-width="0.5" opacity="0.4"/>
+      <line x1="3" y1="14" x2="25" y2="14" stroke="#00ff41" stroke-width="0.5" opacity="0.4"/>
+      <circle cx="19" cy="10" r="1.5" fill="#00ff41" opacity="0.9"/>
+      <circle cx="9" cy="17" r="1" fill="#00ff41" opacity="0.5"/>
     </svg>
   </div>
   <div class="header-text">
-    <div class="header-title">UNIT CONVERTER</div>
-    <div class="header-sub">SI ←→ IMPERIAL · SISTEMA INTERNAZIONALE · STANDARD AERONAUTICO</div>
+    <div class="header-operator">// OPERATORE: CHRISTIAN CAPUANO</div>
+    <div class="header-title">[ UNIT CONVERTER ]</div>
+    <div class="header-sub">SI ←→ IMPERIAL · SISTEMA INTERNAZIONALE · CODEC v2.4.1</div>
   </div>
   <div class="header-status">
-    <div><span class="status-dot"></span>SISTEMA OPERATIVO</div>
-    <div>REV 2.4.1 · ICAO/ANSI</div>
+    <div><span class="status-dot"></span>TRASMISSIONE ATTIVA</div>
+    <div>FREQ: 140.85 MHz</div>
     <div id="clock">--:--:--</div>
   </div>
 </header>
@@ -923,8 +953,8 @@
 </main>
 
 <footer>
-  <span class="footer-text">SISTEMA INTERNAZIONALE (SI) ↔ SISTEMA IMPERIALE · DATI ICAO/ANSI</span>
-  <span class="footer-text">TUTTI I CALCOLI ESEGUITI LOCALMENTE · NO SERVER</span>
+  <span class="footer-text">CHRISTIAN CAPUANO · SI ↔ IMPERIAL · CODEC UNIT CONVERTER</span>
+  <span class="footer-text">TUTTI I CALCOLI LOCALI · NO SERVER · FREQUENZA: 140.85</span>
 </footer>
 
 <script>
